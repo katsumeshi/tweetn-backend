@@ -12,20 +12,20 @@ import (
 
 func main() {
 
-	router := gin.Default()
-	router.LoadHTMLGlob("templates/*")
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
 
-	router.GET("/users/show/:username", ShowUser)
+	r.GET("/users/show/:username", ShowUser)
 
-	router.GET("/login", GetLoginView)
-	router.POST("/login", Login)
+	r.GET("/login", GetLoginView)
+	r.POST("/login", Login)
 
-	router.GET("/tweets/new", GetTweetView)
-	router.POST("/tweets/new", PostTweet)
+	r.GET("/tweets/new", GetTweetView)
+	r.POST("/tweets/new", PostTweet)
 
-	router.GET("/tweets/lists", TweetsList)
+	r.GET("/tweets/lists", TweetsList)
 
-	router.Run(":8080")
+	r.Run(":8080")
 }
 
 func ShowUser(c *gin.Context) {
