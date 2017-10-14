@@ -15,7 +15,7 @@ func main() {
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 
-	r.GET("/users/show/:username", ShowUser)
+	r.GET("/user/:username", ShowUser)
 
 	r.GET("/login", GetLoginView)
 	r.POST("/login", Login)
@@ -23,25 +23,53 @@ func main() {
 	r.GET("/tweets/new", GetTweetView)
 	r.POST("/tweets/new", PostTweet)
 
-	r.GET("/tweets/lists", TweetsList)
+	r.GET("/account", GetAccountView)
+	r.POST("/account", CreateAccount)
 
+	r.GET("/tweets/lists", TweetsList)
 	r.Run(":8080")
 }
 
 func ShowUser(c *gin.Context) {
 	username := c.Param("username")
-	users := []User{}
 
+	user := User{}
 	db := gormConnect()
-	db.Find(&users, "username=?", username)
-	if 0 < len(users) {
-		json := convertToJson(users[0])
-		m := convertToMap(json)
-		c.HTML(http.StatusOK, "show.tmpl", m)
-	} else {
+	if db.First(&user, "username = ?", username).RecordNotFound() {
 		c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
 	}
 
+	c.HTML(http.StatusOK, "show.tmpl", user)
+
+}
+
+func GetAccountView(c *gin.Context) {
+	c.HTML(http.StatusOK, "account.tmpl", Error{})
+}
+
+func CreateAccount(c *gin.Context) {
+	user := User{}
+	c.Bind(&user)
+	if 0 < len(user.Username) {
+		db := gormConnect()
+		if canCreateUser(user.Username) {
+			db.Create(&user)
+			c.Redirect(http.StatusMovedPermanently, "/user/"+user.Username)
+		} else {
+			c.HTML(http.StatusOK, "account.tmpl", Error{0, "Your account is already exisited"})
+		}
+	} else {
+		c.HTML(http.StatusOK, "account.tmpl", Error{1, "At least you need to fill in username"})
+	}
+}
+
+func canCreateUser(username string) bool {
+	db := gormConnect()
+	user := User{}
+	if db.First(&user, "username = ?", username).RecordNotFound() {
+		return true
+	}
+	return false
 }
 
 func GetLoginView(c *gin.Context) {
@@ -56,7 +84,10 @@ func Login(c *gin.Context) {
 	db := gormConnect()
 	db.Find(&users, "username=?", loginUser.Username)
 
-	if 0 < len(users) {
+	isNotFoundUser := 0 == len(users)
+	if isNotFoundUser {
+		c.HTML(http.StatusOK, "login.tmpl", gin.H{"error": true})
+	} else {
 		loginUser = users[0]
 	}
 }
@@ -118,12 +149,17 @@ func gormConnect() *gorm.DB {
 
 // Model ---------------------------------------------
 
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
 type User struct {
 	Id       int    `json:"id"`
-	Name     string `json:"name"`
+	Name     string `form:"name" json:"name"`
 	Username string `form:"username" json:"username"`
-	Location string `json:"location"`
-	About    string `json:"about"`
+	Location string `form:"location" json:"location"`
+	About    string `form:"about" json:"about"`
 }
 
 type Tweet struct {

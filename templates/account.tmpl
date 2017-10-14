@@ -1,0 +1,19 @@
+<form action="/account" method="POST">
+    <p>Create New Account</p>
+    Name: <input type="text" name="name" maxlength="50"/><br />
+    UserName: <input type="text" name="username" maxlength="50"/>
+    {{ if eq .Code 1 }}
+      <label style="color: red;">{{ .Message }}</label>
+    {{ end }}
+    <br />
+    Location: <input type="text" name="location" maxlength="50"/><br />
+    About: <input type="text" name="about" maxlength="50"/>
+    <br /> 
+    <br /> 
+    {{ if eq .Code 0 }}
+      <label style="color: red;">{{ .Message }}</label>
+    {{ end }}
+    <br /> 
+    <br />
+    <input type="submit" value="create account"/>
+</form>

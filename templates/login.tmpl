@@ -1,0 +1,10 @@
+<form action="/login" method="POST">
+    <p>Enter your login name</p>
+    <input type="text" name="username" maxlength="50"/>
+    <input type="submit" value="login"/>
+</form>
+<a href="/account">create acount</a> 
+<br />
+{{ if .error }}
+  <label style="color: red;">Your user name is not registerd</label>
+{{ end }}
