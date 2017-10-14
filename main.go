@@ -17,7 +17,7 @@ func main() {
 	router.LoadHTMLGlob("templates/*")
 	router.GET("/users/show/:username", func(c *gin.Context) {
 		username := c.Param("username")
-		users := []user{}
+		users := []User{}
 
 		db.Find(&users, "username=?", username)
 		if 0 < len(users) {
@@ -29,8 +29,55 @@ func main() {
 		}
 
 	})
+
+	router.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.tmpl", nil)
+	})
+
+	var loginUser User
+	router.POST("/login", func(c *gin.Context) {
+		c.Bind(&loginUser)
+
+		users := []User{}
+		db.Find(&users, "username=?", loginUser.Username)
+
+		if 0 < len(users) {
+			loginUser = users[0]
+		}
+		//		tweet.UserId = users[0].Id
+		//		db.Create(&tweet)
+		//
+		//		c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
+	})
+
+	router.GET("/tweets/new", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "new.tmpl", nil)
+	})
+
+	router.POST("/tweets/new", func(c *gin.Context) {
+		var tweet Tweet
+		c.Bind(&tweet)
+
+		tweet.UserId = loginUser.Id
+		db.Create(&tweet)
+
+		c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
+	})
+
+	visitCount := 0
+
+	router.GET("/tweets/lists", func(c *gin.Context) {
+		tweets := []Tweet{}
+		db.Preload("User").Find(&tweets)
+		c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
+		fmt.Println("%d", visitCount)
+		visitCount++
+	})
+
 	router.Run(":8080")
 }
+
+// Util ---------------------------------------------
 
 func convertToMap(jsonString string) gin.H {
 	m := make(gin.H)
@@ -42,7 +89,7 @@ func convertToMap(jsonString string) gin.H {
 	return m
 }
 
-func convertToJson(user user) string {
+func convertToJson(user User) string {
 	j, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
@@ -51,12 +98,7 @@ func convertToJson(user user) string {
 	return string(j)
 }
 
-type user struct {
-	Name     string `json:"name" binding:"required"`
-	Username string `json:"username"`
-	Location string `json:"location"`
-	About    string `json:"about"`
-}
+// DB ---------------------------------------------
 
 func gormConnect() *gorm.DB {
 	//open a db connection
@@ -66,4 +108,21 @@ func gormConnect() *gorm.DB {
 		panic("failed to connect database")
 	}
 	return db
+}
+
+// Model ---------------------------------------------
+
+type User struct {
+	Id       int    `json:"id"`
+	Name     string `json:"name"`
+	Username string `form:"username" json:"username"`
+	Location string `json:"location"`
+	About    string `json:"about"`
+}
+
+type Tweet struct {
+	Id      int
+	Content string `form:"content" json:"content"`
+	UserId  int    `json:"user_id"`
+	User    User
 }
