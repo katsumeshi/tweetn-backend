@@ -11,70 +11,76 @@ import (
 )
 
 func main() {
-	db := gormConnect()
 
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
-	router.GET("/users/show/:username", func(c *gin.Context) {
-		username := c.Param("username")
-		users := []User{}
 
-		db.Find(&users, "username=?", username)
-		if 0 < len(users) {
-			json := convertToJson(users[0])
-			m := convertToMap(json)
-			c.HTML(http.StatusOK, "show.tmpl", m)
-		} else {
-			c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
-		}
+	router.GET("/users/show/:username", ShowUser)
 
-	})
+	router.GET("/login", GetLoginView)
+	router.POST("/login", Login)
 
-	router.GET("/login", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "login.tmpl", nil)
-	})
+	router.GET("/tweets/new", GetTweetView)
+	router.POST("/tweets/new", PostTweet)
 
-	var loginUser User
-	router.POST("/login", func(c *gin.Context) {
-		c.Bind(&loginUser)
-
-		users := []User{}
-		db.Find(&users, "username=?", loginUser.Username)
-
-		if 0 < len(users) {
-			loginUser = users[0]
-		}
-		//		tweet.UserId = users[0].Id
-		//		db.Create(&tweet)
-		//
-		//		c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
-	})
-
-	router.GET("/tweets/new", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "new.tmpl", nil)
-	})
-
-	router.POST("/tweets/new", func(c *gin.Context) {
-		var tweet Tweet
-		c.Bind(&tweet)
-
-		tweet.UserId = loginUser.Id
-		db.Create(&tweet)
-
-		c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
-	})
-
-	visitCount := 0
-
-	router.GET("/tweets/lists", func(c *gin.Context) {
-		tweets := []Tweet{}
-		db.Preload("User").Find(&tweets)
-		c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
-		fmt.Println("%d", visitCount)
-		visitCount++
-	})
+	router.GET("/tweets/lists", TweetsList)
 
 	router.Run(":8080")
+}
+
+func ShowUser(c *gin.Context) {
+	username := c.Param("username")
+	users := []User{}
+
+	db := gormConnect()
+	db.Find(&users, "username=?", username)
+	if 0 < len(users) {
+		json := convertToJson(users[0])
+		m := convertToMap(json)
+		c.HTML(http.StatusOK, "show.tmpl", m)
+	} else {
+		c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
+	}
+
+}
+
+func GetLoginView(c *gin.Context) {
+	c.HTML(http.StatusOK, "login.tmpl", nil)
+}
+
+func Login(c *gin.Context) {
+	var loginUser User
+	c.Bind(&loginUser)
+
+	users := []User{}
+	db := gormConnect()
+	db.Find(&users, "username=?", loginUser.Username)
+
+	if 0 < len(users) {
+		loginUser = users[0]
+	}
+}
+
+func GetTweetView(c *gin.Context) {
+	c.HTML(http.StatusOK, "new.tmpl", nil)
+}
+
+func PostTweet(c *gin.Context) {
+	var tweet Tweet
+	c.Bind(&tweet)
+
+	tweet.UserId = 1
+	db := gormConnect()
+	db.Create(&tweet)
+
+	c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
+}
+
+func TweetsList(c *gin.Context) {
+	tweets := []Tweet{}
+	db := gormConnect()
+	db.Preload("User").Find(&tweets)
+	c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
 }
 
 // Util ---------------------------------------------
