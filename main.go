@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"encoding/json"
+
 	"github.com/gin-gonic/gin"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -37,10 +39,9 @@ func ShowUser(c *gin.Context) {
 	db := gormConnect()
 	if db.First(&user, "username = ?", username).RecordNotFound() {
 		c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
+	} else {
+		c.HTML(http.StatusOK, "show.tmpl", user)
 	}
-
-	c.HTML(http.StatusOK, "show.tmpl", user)
-
 }
 
 func GetAccountView(c *gin.Context) {
