@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"encoding/json"
-
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 
 	"github.com/jinzhu/gorm"
@@ -15,6 +14,11 @@ import (
 func main() {
 
 	r := gin.Default()
+	//	store := sessions.NewCookieStore([]byte("secret"))
+
+	store, _ := sessions.NewRedisStore(10, "tcp", "localhost:6379", "", []byte("secret"))
+	r.Use(sessions.Sessions("session", store))
+
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/user/:username", ShowUser)
@@ -42,6 +46,9 @@ func ShowUser(c *gin.Context) {
 	} else {
 		c.HTML(http.StatusOK, "show.tmpl", user)
 	}
+
+	session := sessions.Default(c)
+	fmt.Printf("%v", session.Get("bbb"))
 }
 
 func GetAccountView(c *gin.Context) {
@@ -90,7 +97,18 @@ func Login(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.tmpl", gin.H{"error": true})
 	} else {
 		loginUser = users[0]
+		session := sessions.Default(c)
+		v := session.Get("user")
+		if v == nil {
+			session.Set("user", loginUser)
+			session.Save()
+		} else {
+			loginUser = v.(User)
+		}
+
+		c.JSON(200, gin.H{"user": loginUser})
 	}
+
 }
 
 func GetTweetView(c *gin.Context) {
@@ -113,27 +131,6 @@ func TweetsList(c *gin.Context) {
 	db := gormConnect()
 	db.Preload("User").Find(&tweets)
 	c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
-}
-
-// Util ---------------------------------------------
-
-func convertToMap(jsonString string) gin.H {
-	m := make(gin.H)
-	err := json.Unmarshal([]byte(jsonString), &m)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	return m
-}
-
-func convertToJson(user User) string {
-	j, err := json.Marshal(user)
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	return string(j)
 }
 
 // DB ---------------------------------------------
