@@ -98,17 +98,30 @@ func Login(c *gin.Context) {
 	} else {
 		loginUser = users[0]
 		session := sessions.Default(c)
-		v := session.Get("user")
+		v := session.Get("userId")
+		var userId int
 		if v == nil {
-			session.Set("user", loginUser)
+			userId = loginUser.Id
+			session.Set("userId", userId)
 			session.Save()
 		} else {
-			loginUser = v.(User)
+			userId = v.(int)
 		}
 
 		c.JSON(200, gin.H{"user": loginUser})
 	}
 
+}
+
+func getSessionUserId(c *gin.Context) int {
+	session := sessions.Default(c)
+	v := session.Get("userId")
+	fmt.Printf("%v", v)
+	if v == nil {
+		return -1
+	} else {
+		return v.(int)
+	}
 }
 
 func GetTweetView(c *gin.Context) {
@@ -119,7 +132,8 @@ func PostTweet(c *gin.Context) {
 	var tweet Tweet
 	c.Bind(&tweet)
 
-	tweet.UserId = 1
+	userId := getSessionUserId(c)
+	tweet.UserId = userId
 	db := gormConnect()
 	db.Create(&tweet)
 
