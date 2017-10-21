@@ -1,3 +1,13 @@
+<form action="/logout" method="POST">
+    <input type="submit" value="logout"/>
+</form>
+
+<form action="/tweets/new" method="POST">
+    <p>What's happening?</p>
+    <input type="text" name="content" maxlength="50"/>
+    <input type="submit" />
+</form>
+
 {{ range .tweets }} 
   {{ .User.Name }} @ {{ .User.Username }} :  {{ .Content }}  <br /> 
 {{ end }}

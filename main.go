@@ -25,8 +25,9 @@ func main() {
 
 	r.GET("/login", GetLoginView)
 	r.POST("/login", Login)
+	r.POST("/logout", Logout)
 
-	r.GET("/tweets/new", GetTweetView)
+	// r.GET("/tweets/new", GetTweetView)
 	r.POST("/tweets/new", PostTweet)
 
 	r.GET("/account", GetAccountView)
@@ -46,9 +47,6 @@ func ShowUser(c *gin.Context) {
 	} else {
 		c.HTML(http.StatusOK, "show.tmpl", user)
 	}
-
-	session := sessions.Default(c)
-	fmt.Printf("%v", session.Get("bbb"))
 }
 
 func GetAccountView(c *gin.Context) {
@@ -107,10 +105,15 @@ func Login(c *gin.Context) {
 		} else {
 			userId = v.(int)
 		}
-
-		c.JSON(200, gin.H{"user": loginUser})
+		c.Redirect(http.StatusMovedPermanently, "/tweets/lists")
 	}
+}
 
+func Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete("userId")
+	session.Save()
+	c.Redirect(http.StatusMovedPermanently, "/login")
 }
 
 func getSessionUserId(c *gin.Context) int {
@@ -137,18 +140,26 @@ func PostTweet(c *gin.Context) {
 	db := gormConnect()
 	db.Create(&tweet)
 
-	c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
+	// c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
+	c.Redirect(http.StatusMovedPermanently, "/tweets/lists")
 }
 
 func TweetsList(c *gin.Context) {
+
+	session := sessions.Default(c)
+	userId := session.Get("userId")
+	if userId == nil {
+		c.Redirect(http.StatusMovedPermanently, "/login")
+	}
+
 	tweets := []Tweet{}
 	db := gormConnect()
-	db.Preload("User").Find(&tweets)
+	db.Preload("User").Order("Id desc").Find(&tweets)
+
 	c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
 }
 
 // DB ---------------------------------------------
-
 func gormConnect() *gorm.DB {
 	//open a db connection
 	db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
