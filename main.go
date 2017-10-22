@@ -23,11 +23,11 @@ func main() {
 
 	r.GET("/user/:username", ShowUser)
 
+	r.GET("/", Entrance)
 	r.GET("/login", GetLoginView)
 	r.POST("/login", Login)
 	r.POST("/logout", Logout)
 
-	// r.GET("/tweets/new", GetTweetView)
 	r.POST("/tweets/new", PostTweet)
 
 	r.GET("/account", GetAccountView)
@@ -35,6 +35,16 @@ func main() {
 
 	r.GET("/tweets/lists", TweetsList)
 	r.Run(":8080")
+}
+
+func Entrance(c *gin.Context) {
+	userId := getSessionUserId(c)
+	fmt.Printf("%v", userId)
+	if 0 <= userId {
+		c.Redirect(302, "/tweets/lists")
+	} else {
+		c.Redirect(302, "/login")
+	}
 }
 
 func ShowUser(c *gin.Context) {
@@ -140,7 +150,6 @@ func PostTweet(c *gin.Context) {
 	db := gormConnect()
 	db.Create(&tweet)
 
-	// c.JSON(http.StatusOK, gin.H{"message": tweet.Content, "user": tweet.UserId})
 	c.Redirect(http.StatusMovedPermanently, "/tweets/lists")
 }
 
