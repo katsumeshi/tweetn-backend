@@ -173,8 +173,12 @@ func TweetsList(c *gin.Context) {
 
 // DB ---------------------------------------------
 func gormConnect() *gorm.DB {
-	//open a db connection
-	db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
+
+	dbUrl := os.Getenv("CLEARDB_DATABASE_URL")
+	dbInfo := Split(dbUrl, "://")
+
+	db, err := gorm.Open(dbInfo[0], dbInfo[1])
+	// db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
 	if err != nil {
 		fmt.Printf("can't connect db")
 		panic("failed to connect database")
