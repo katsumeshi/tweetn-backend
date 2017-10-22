@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,9 @@ func main() {
 	r.POST("/account", CreateAccount)
 
 	r.GET("/tweets/lists", TweetsList)
-	r.Run(":8080")
+
+	port := os.Getenv("PORT")
+	r.Run(":" + port)
 }
 
 func Entrance(c *gin.Context) {
