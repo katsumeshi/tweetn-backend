@@ -177,6 +177,8 @@ func gormConnect() *gorm.DB {
 
 	dbUrl := os.Getenv("CLEARDB_DATABASE_URL")
 	dbInfo := strings.Split(dbUrl, "://")
+	fmt.Printf("db info %v", dbInfo[0])
+	fmt.Printf("db info %v", dbInfo[1])
 
 	db, err := gorm.Open(dbInfo[0], dbInfo[1])
 	// db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
