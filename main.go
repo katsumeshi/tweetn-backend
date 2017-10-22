@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -175,7 +176,7 @@ func TweetsList(c *gin.Context) {
 func gormConnect() *gorm.DB {
 
 	dbUrl := os.Getenv("CLEARDB_DATABASE_URL")
-	dbInfo := Split(dbUrl, "://")
+	dbInfo := strings.Split(dbUrl, "://")
 
 	db, err := gorm.Open(dbInfo[0], dbInfo[1])
 	// db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
