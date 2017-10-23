@@ -37,9 +37,13 @@ func main() {
 
 	r.GET("/tweets/lists", TweetsList)
 
-	// port := os.Getenv("PORT")
-	// r.Run(":" + port)
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port != "" {
+		r.Run(":" + port)
+	} else {
+		r.Run(":8080")
+	}
+
 }
 
 func Entrance(c *gin.Context) {
