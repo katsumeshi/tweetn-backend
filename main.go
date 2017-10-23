@@ -186,9 +186,9 @@ func gormConnect() *gorm.DB {
 		panic(err)
 	}
 	connectInfo := u.User.String() + "@tcp(" + u.Host + ")" + u.Path
-	db, err := gorm.Open(connectInfo)
+	db, err := gorm.Open(u.Scheme, connectInfo)
 	if err != nil {
-		fmt.Printf(connectInfo)
+		fmt.Printf(connectInfo + "\n")
 		fmt.Printf("can't connect db")
 		panic("failed to connect database")
 	}
