@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -37,8 +37,9 @@ func main() {
 
 	r.GET("/tweets/lists", TweetsList)
 
-	port := os.Getenv("PORT")
-	r.Run(":" + port)
+	// port := os.Getenv("PORT")
+	// r.Run(":" + port)
+	r.Run(":8080")
 }
 
 func Entrance(c *gin.Context) {
@@ -176,12 +177,13 @@ func TweetsList(c *gin.Context) {
 func gormConnect() *gorm.DB {
 
 	dbUrl := os.Getenv("CLEARDB_DATABASE_URL")
-	dbInfo := strings.Split(dbUrl, "://")
-	fmt.Printf("db info %v", dbInfo[0])
-	fmt.Printf("db info %v", dbInfo[1])
-
-	db, err := gorm.Open(dbInfo[0], dbInfo[1])
-	// db, err := gorm.Open("mysql", "root:@tcp(127.0.0.1:3306)/development")
+	u, err := url.Parse(dbUrl)
+	if err != nil {
+		panic(err)
+	}
+	connectInfo := u.User.String() + "@tcp(" + u.Host + ")/" + u.Path
+	fmt.Printf("%v", connectInfo)
+	db, err := gorm.Open(connectInfo)
 	if err != nil {
 		fmt.Printf("can't connect db")
 		panic("failed to connect database")
