@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -13,13 +14,29 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
+var IsHeroku = false
+
 func main() {
 
-	r := gin.Default()
-	//	store := sessions.NewCookieStore([]byte("secret"))
+	b, err := strconv.ParseBool(os.Getenv("IS_HEROKU"))
+	if err == nil {
+		IsHeroku = b
+	}
 
-	store, _ := sessions.NewRedisStore(10, "tcp", "localhost:6379", "", []byte("secret"))
-	r.Use(sessions.Sessions("session", store))
+	r := gin.Default()
+
+	if IsHeroku {
+		u, err := url.Parse(os.Getenv("REDIS_URL"))
+		if err != nil {
+			panic(err)
+		}
+		p, _ := u.User.Password()
+		store, _ := sessions.NewRedisStore(10, "tcp", u.Host, p, []byte("secret"))
+		r.Use(sessions.Sessions("session", store))
+	} else {
+		store, _ := sessions.NewRedisStore(10, "tcp", "localhost:6379", "", []byte("secret"))
+		r.Use(sessions.Sessions("session", store))
+	}
 
 	r.LoadHTMLGlob("templates/*")
 
@@ -37,8 +54,8 @@ func main() {
 
 	r.GET("/tweets/lists", TweetsList)
 
-	port := os.Getenv("PORT")
-	if port != "" {
+	if IsHeroku {
+		port := os.Getenv("PORT")
 		r.Run(":" + port)
 	} else {
 		r.Run(":8080")
@@ -185,8 +202,13 @@ func gormConnect() *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
-	connectInfo := u.User.String() + "@tcp(" + u.Host + ")" + u.Path
-	db, err := gorm.Open(u.Scheme, connectInfo)
+	var scheme string = "mysql"
+	var connectInfo string = "root:@tcp(127.0.0.1:3306)/development"
+	if IsHeroku {
+		scheme = u.Scheme
+		connectInfo = u.User.String() + "@tcp(" + u.Host + ")" + u.Path
+	}
+	db, err := gorm.Open(scheme, connectInfo)
 	if err != nil {
 		fmt.Printf(connectInfo + "\n")
 		fmt.Printf("can't connect db")
