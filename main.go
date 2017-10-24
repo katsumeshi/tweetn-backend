@@ -40,19 +40,17 @@ func main() {
 
 	r.LoadHTMLGlob("templates/*")
 
-	r.GET("/user/:username", ShowUser)
-
 	r.GET("/", Entrance)
 	r.GET("/login", GetLoginView)
 	r.POST("/login", Login)
 	r.POST("/logout", Logout)
 
-	r.POST("/tweets/new", PostTweet)
+	r.GET("/users", GetUserCreationView)
+	r.POST("/users", CreateUser)
+	r.GET("/users/:username", ShowUser)
 
-	r.GET("/account", GetAccountView)
-	r.POST("/account", CreateAccount)
-
-	r.GET("/tweets/lists", TweetsList)
+	r.POST("/tweets", PostTweets)
+	r.GET("/tweets", ShowTweets)
 
 	if IsHeroku {
 		port := os.Getenv("PORT")
@@ -67,7 +65,7 @@ func Entrance(c *gin.Context) {
 	userId := getSessionUserId(c)
 	fmt.Printf("%v", userId)
 	if 0 <= userId {
-		c.Redirect(302, "/tweets/lists")
+		c.Redirect(302, "/tweets")
 	} else {
 		c.Redirect(302, "/login")
 	}
@@ -85,18 +83,18 @@ func ShowUser(c *gin.Context) {
 	}
 }
 
-func GetAccountView(c *gin.Context) {
+func GetUserCreationView(c *gin.Context) {
 	c.HTML(http.StatusOK, "account.tmpl", Error{})
 }
 
-func CreateAccount(c *gin.Context) {
+func CreateUser(c *gin.Context) {
 	user := User{}
 	c.Bind(&user)
 	if 0 < len(user.Username) {
 		db := gormConnect()
 		if canCreateUser(user.Username) {
 			db.Create(&user)
-			c.Redirect(http.StatusMovedPermanently, "/user/"+user.Username)
+			c.Redirect(http.StatusMovedPermanently, "/users/"+user.Username)
 		} else {
 			c.HTML(http.StatusOK, "account.tmpl", Error{0, "Your account is already exisited"})
 		}
@@ -141,7 +139,7 @@ func Login(c *gin.Context) {
 		} else {
 			userId = v.(int)
 		}
-		c.Redirect(http.StatusMovedPermanently, "/tweets/lists")
+		c.Redirect(http.StatusMovedPermanently, "/tweets")
 	}
 }
 
@@ -167,7 +165,7 @@ func GetTweetView(c *gin.Context) {
 	c.HTML(http.StatusOK, "new.tmpl", nil)
 }
 
-func PostTweet(c *gin.Context) {
+func PostTweets(c *gin.Context) {
 	var tweet Tweet
 	c.Bind(&tweet)
 
@@ -176,10 +174,10 @@ func PostTweet(c *gin.Context) {
 	db := gormConnect()
 	db.Create(&tweet)
 
-	c.Redirect(http.StatusMovedPermanently, "/tweets/lists")
+	c.Redirect(http.StatusMovedPermanently, "/tweets")
 }
 
-func TweetsList(c *gin.Context) {
+func ShowTweets(c *gin.Context) {
 
 	session := sessions.Default(c)
 	userId := session.Get("userId")
