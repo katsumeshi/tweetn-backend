@@ -17,6 +17,10 @@ import (
 var IsHeroku = false
 
 func main() {
+	GetMainEngine().Run()
+}
+
+func GetMainEngine() *gin.Engine {
 
 	b, err := strconv.ParseBool(os.Getenv("IS_HEROKU"))
 	if err == nil {
@@ -55,12 +59,14 @@ func main() {
 		v1.GET("/tweets", ShowTweets)
 	}
 
-	if IsHeroku {
-		port := os.Getenv("PORT")
-		r.Run(":" + port)
-	} else {
-		r.Run(":8080")
-	}
+	return r
+
+	//	if IsHeroku {
+	//		port := os.Getenv("PORT")
+	//		r.Run(":" + port)
+	//	} else {
+	//		r.Run(":8080")
+	//	}
 
 }
 
