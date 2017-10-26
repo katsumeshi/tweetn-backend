@@ -60,14 +60,6 @@ func GetMainEngine() *gin.Engine {
 	}
 
 	return r
-
-	//	if IsHeroku {
-	//		port := os.Getenv("PORT")
-	//		r.Run(":" + port)
-	//	} else {
-	//		r.Run(":8080")
-	//	}
-
 }
 
 func Entrance(c *gin.Context) {
@@ -82,7 +74,6 @@ func Entrance(c *gin.Context) {
 
 func ShowUser(c *gin.Context) {
 	username := c.Param("username")
-
 	user := User{}
 	db := gormConnect()
 	if db.First(&user, "username = ?", username).RecordNotFound() {
@@ -135,7 +126,7 @@ func Login(c *gin.Context) {
 
 	isNotFoundUser := 0 == len(users)
 	if isNotFoundUser {
-		c.HTML(http.StatusOK, "login.tmpl", gin.H{"error": true})
+		c.JSON(200, Error{3, "Not found user"})
 	} else {
 		loginUser = users[0]
 		session := sessions.Default(c)
