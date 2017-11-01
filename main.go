@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"tweetn-background/dao"
 	"tweetn-background/model"
 
 	"github.com/gin-contrib/sessions"
@@ -119,14 +120,14 @@ func Login(c *gin.Context) {
 	var loginUser model.User
 	c.Bind(&loginUser)
 
-	users := []model.User{}
-	db.Find(&users, "username=?", loginUser.Username)
+	var daoUser dao.User
+	user, err := daoUser.FindFirst(loginUser.Username)
+	isNotFoundUser := err != nil
 
-	isNotFoundUser := 0 == len(users)
 	if isNotFoundUser {
 		c.JSON(200, Error{3, "Not found user"})
 	} else {
-		loginUser = users[0]
+		loginUser = user
 		session := sessions.Default(c)
 		v := session.Get("userId")
 		var userId int
