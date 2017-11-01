@@ -14,7 +14,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-var IsHeroku = false
+var isHeroku = false
+var db = gormConnect()
 
 func main() {
 	GetMainEngine().Run()
@@ -24,12 +25,12 @@ func GetMainEngine() *gin.Engine {
 
 	b, err := strconv.ParseBool(os.Getenv("IS_HEROKU"))
 	if err == nil {
-		IsHeroku = b
+		isHeroku = b
 	}
 
 	r := gin.Default()
 
-	if IsHeroku {
+	if isHeroku {
 		u, err := url.Parse(os.Getenv("REDIS_URL"))
 		if err != nil {
 			panic(err)
@@ -75,7 +76,6 @@ func Entrance(c *gin.Context) {
 func ShowUser(c *gin.Context) {
 	username := c.Param("username")
 	user := User{}
-	db := gormConnect()
 	if db.First(&user, "username = ?", username).RecordNotFound() {
 		c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
 	} else {
@@ -91,7 +91,6 @@ func CreateUser(c *gin.Context) {
 	user := User{}
 	c.Bind(&user)
 	if 0 < len(user.Username) {
-		db := gormConnect()
 		if canCreateUser(user.Username) {
 			db.Create(&user)
 			c.Redirect(http.StatusMovedPermanently, "/v1/users/"+user.Username)
@@ -104,7 +103,6 @@ func CreateUser(c *gin.Context) {
 }
 
 func canCreateUser(username string) bool {
-	db := gormConnect()
 	user := User{}
 	if db.First(&user, "username = ?", username).RecordNotFound() {
 		return true
@@ -121,7 +119,6 @@ func Login(c *gin.Context) {
 	c.Bind(&loginUser)
 
 	users := []User{}
-	db := gormConnect()
 	db.Find(&users, "username=?", loginUser.Username)
 
 	isNotFoundUser := 0 == len(users)
@@ -171,7 +168,6 @@ func PostTweets(c *gin.Context) {
 
 	userId := getSessionUserId(c)
 	tweet.UserId = userId
-	db := gormConnect()
 	db.Create(&tweet)
 
 	c.Redirect(http.StatusMovedPermanently, "/v1/tweets")
@@ -186,7 +182,6 @@ func ShowTweets(c *gin.Context) {
 	}
 
 	tweets := []Tweet{}
-	db := gormConnect()
 	db.Preload("User").Order("Id desc").Find(&tweets)
 
 	c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
@@ -202,7 +197,7 @@ func gormConnect() *gorm.DB {
 	}
 	var scheme string = "mysql"
 	var connectInfo string = "root:@tcp(127.0.0.1:3306)/development"
-	if IsHeroku {
+	if isHeroku {
 		scheme = u.Scheme
 		connectInfo = u.User.String() + "@tcp(" + u.Host + ")" + u.Path
 	}
