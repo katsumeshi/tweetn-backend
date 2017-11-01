@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"tweetn-background/model"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -75,7 +76,7 @@ func Entrance(c *gin.Context) {
 
 func ShowUser(c *gin.Context) {
 	username := c.Param("username")
-	user := User{}
+	user := model.User{}
 	if db.First(&user, "username = ?", username).RecordNotFound() {
 		c.JSON(http.StatusNotFound, gin.H{"message": "can't find the user"})
 	} else {
@@ -88,7 +89,7 @@ func GetUserCreationView(c *gin.Context) {
 }
 
 func CreateUser(c *gin.Context) {
-	user := User{}
+	user := model.User{}
 	c.Bind(&user)
 	if 0 < len(user.Username) {
 		if canCreateUser(user.Username) {
@@ -103,7 +104,7 @@ func CreateUser(c *gin.Context) {
 }
 
 func canCreateUser(username string) bool {
-	user := User{}
+	user := model.User{}
 	if db.First(&user, "username = ?", username).RecordNotFound() {
 		return true
 	}
@@ -115,10 +116,10 @@ func GetLoginView(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-	var loginUser User
+	var loginUser model.User
 	c.Bind(&loginUser)
 
-	users := []User{}
+	users := []model.User{}
 	db.Find(&users, "username=?", loginUser.Username)
 
 	isNotFoundUser := 0 == len(users)
@@ -163,7 +164,7 @@ func GetTweetView(c *gin.Context) {
 }
 
 func PostTweets(c *gin.Context) {
-	var tweet Tweet
+	var tweet model.Tweet
 	c.Bind(&tweet)
 
 	userId := getSessionUserId(c)
@@ -181,7 +182,7 @@ func ShowTweets(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/v1/login")
 	}
 
-	tweets := []Tweet{}
+	tweets := []model.Tweet{}
 	db.Preload("User").Order("Id desc").Find(&tweets)
 
 	c.HTML(http.StatusOK, "lists.tmpl", gin.H{"tweets": tweets})
@@ -215,19 +216,4 @@ func gormConnect() *gorm.DB {
 type Error struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-}
-
-type User struct {
-	Id       int    `json:"id"`
-	Name     string `form:"name" json:"name"`
-	Username string `form:"username" json:"username"`
-	Location string `form:"location" json:"location"`
-	About    string `form:"about" json:"about"`
-}
-
-type Tweet struct {
-	Id      int
-	Content string `form:"content" json:"content"`
-	UserId  int    `json:"user_id"`
-	User    User
 }
