@@ -2,9 +2,11 @@ language: go
 
 go:
     - master
-
 before_script:
     go get -t -v ./...
 
 script:
     go test -v ./...
+
+services:
+  - mysql
