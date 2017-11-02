@@ -2,6 +2,9 @@
 	"ImportPath": "tweetn-background",
 	"GoVersion": "go1.9",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/boj/redistore",
@@ -16,6 +19,11 @@
 		{
 			"ImportPath": "github.com/bradleypeabody/gorilla-sessions-memcache",
 			"Rev": "75ee37df8664a47cd5d9eb84d41e1f2b08086893"
+		},
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Comment": "v1.1.0-9-gecdeabc",
+			"Rev": "ecdeabc65495df2dec95d7c4a4c3e021903035e5"
 		},
 		{
 			"ImportPath": "github.com/garyburd/redigo/internal",
@@ -106,6 +114,25 @@
 			"ImportPath": "github.com/mattn/go-isatty",
 			"Comment": "v0.0.3-1-ga5cdd64",
 			"Rev": "a5cdd64afdee435007ee3e9f6ed4684af949d568"
+		},
+		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Comment": "v1.0.0",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
+		},
+		{
+			"ImportPath": "github.com/stretchr/objx",
+			"Rev": "1a9d0bb9f541897e62256577b352fdbc1fb4fd94"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.1.4-72-g2aa2c17",
+			"Rev": "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/mock",
+			"Comment": "v1.1.4-72-g2aa2c17",
+			"Rev": "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f"
 		},
 		{
 			"ImportPath": "github.com/ugorji/go/codec",
