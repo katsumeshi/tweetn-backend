@@ -3,6 +3,9 @@ language: go
 go:
     - master
 
+before_install:
+  - export GOROOT=$(go env GOROOT)
+
 script:
     go test -v ./...
 
