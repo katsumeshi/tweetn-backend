@@ -1,8 +1,6 @@
 package dao
 
 import (
-	"testing"
-
 	"github.com/jinzhu/gorm"
 )
 
@@ -11,6 +9,7 @@ var (
 	userDao User
 )
 
-func TestUserFindList(t *testing.T) {
-	// userDao.FindFist
-}
+//
+//func TestUserFindList(t *testing.T) {
+//	// userDao.FindFist
+//}
