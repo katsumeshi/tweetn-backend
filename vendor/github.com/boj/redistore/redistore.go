@@ -230,10 +230,7 @@ func (s *RediStore) Get(r *http.Request, name string) (*sessions.Session, error)
 //
 // See gorilla/sessions FilesystemStore.New().
 func (s *RediStore) New(r *http.Request, name string) (*sessions.Session, error) {
-	var (
-		err error
-		ok  bool
-	)
+	var err error
 	session := sessions.NewSession(s, name)
 	// make a copy
 	options := *s.Options
@@ -242,7 +239,7 @@ func (s *RediStore) New(r *http.Request, name string) (*sessions.Session, error)
 	if c, errCookie := r.Cookie(name); errCookie == nil {
 		err = securecookie.DecodeMulti(name, c.Value, &session.ID, s.Codecs...)
 		if err == nil {
-			ok, err = s.load(session)
+			ok, err := s.load(session)
 			session.IsNew = !(err == nil && ok) // not new if no error and data available
 		}
 	}

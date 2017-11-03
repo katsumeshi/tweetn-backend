@@ -104,7 +104,8 @@ var (
 
 type msgpackEncDriver struct {
 	noBuiltInTypes
-	encNoSeparator
+	encDriverNoopContainerWriter
+	// encNoSeparator
 	e *Encoder
 	w encWriter
 	h *MsgpackHandle
@@ -116,10 +117,26 @@ func (e *msgpackEncDriver) EncodeNil() {
 }
 
 func (e *msgpackEncDriver) EncodeInt(i int64) {
-	if i >= 0 {
-		e.EncodeUint(uint64(i))
+	// if i >= 0 {
+	// 	e.EncodeUint(uint64(i))
+	// } else if false &&
+	if i > math.MaxInt8 {
+		if i <= math.MaxInt16 {
+			e.w.writen1(mpInt16)
+			bigenHelper{e.x[:2], e.w}.writeUint16(uint16(i))
+		} else if i <= math.MaxInt32 {
+			e.w.writen1(mpInt32)
+			bigenHelper{e.x[:4], e.w}.writeUint32(uint32(i))
+		} else {
+			e.w.writen1(mpInt64)
+			bigenHelper{e.x[:8], e.w}.writeUint64(uint64(i))
+		}
 	} else if i >= -32 {
-		e.w.writen1(byte(i))
+		if e.h.NoFixedNum {
+			e.w.writen2(mpInt8, byte(i))
+		} else {
+			e.w.writen1(byte(i))
+		}
 	} else if i >= math.MinInt8 {
 		e.w.writen2(mpInt8, byte(i))
 	} else if i >= math.MinInt16 {
@@ -136,7 +153,11 @@ func (e *msgpackEncDriver) EncodeInt(i int64) {
 
 func (e *msgpackEncDriver) EncodeUint(i uint64) {
 	if i <= math.MaxInt8 {
-		e.w.writen1(byte(i))
+		if e.h.NoFixedNum {
+			e.w.writen2(mpUint8, byte(i))
+		} else {
+			e.w.writen1(byte(i))
+		}
 	} else if i <= math.MaxUint8 {
 		e.w.writen2(mpUint8, byte(i))
 	} else if i <= math.MaxUint16 {
@@ -213,21 +234,22 @@ func (e *msgpackEncDriver) encodeExtPreamble(xtag byte, l int) {
 	}
 }
 
-func (e *msgpackEncDriver) EncodeArrayStart(length int) {
+func (e *msgpackEncDriver) WriteArrayStart(length int) {
 	e.writeContainerLen(msgpackContainerList, length)
 }
 
-func (e *msgpackEncDriver) EncodeMapStart(length int) {
+func (e *msgpackEncDriver) WriteMapStart(length int) {
 	e.writeContainerLen(msgpackContainerMap, length)
 }
 
 func (e *msgpackEncDriver) EncodeString(c charEncoding, s string) {
+	slen := len(s)
 	if c == c_RAW && e.h.WriteExt {
-		e.writeContainerLen(msgpackContainerBin, len(s))
+		e.writeContainerLen(msgpackContainerBin, slen)
 	} else {
-		e.writeContainerLen(msgpackContainerStr, len(s))
+		e.writeContainerLen(msgpackContainerStr, slen)
 	}
-	if len(s) > 0 {
+	if slen > 0 {
 		e.w.writestr(s)
 	}
 }
@@ -237,12 +259,13 @@ func (e *msgpackEncDriver) EncodeSymbol(v string) {
 }
 
 func (e *msgpackEncDriver) EncodeStringBytes(c charEncoding, bs []byte) {
+	slen := len(bs)
 	if c == c_RAW && e.h.WriteExt {
-		e.writeContainerLen(msgpackContainerBin, len(bs))
+		e.writeContainerLen(msgpackContainerBin, slen)
 	} else {
-		e.writeContainerLen(msgpackContainerStr, len(bs))
+		e.writeContainerLen(msgpackContainerStr, slen)
 	}
-	if len(bs) > 0 {
+	if slen > 0 {
 		e.w.writeb(bs)
 	}
 }
@@ -272,8 +295,9 @@ type msgpackDecDriver struct {
 	bdRead bool
 	br     bool // bytes reader
 	noBuiltInTypes
-	noStreamingCodec
-	decNoSeparator
+	// noStreamingCodec
+	// decNoSeparator
+	decDriverNoopContainerReader
 }
 
 // Note: This returns either a primitive (int, bool, etc) for non-containers,
@@ -746,6 +770,9 @@ type MsgpackHandle struct {
 	// RawToString controls how raw bytes are decoded into a nil interface{}.
 	RawToString bool
 
+	// NoFixedNum says to output all signed integers as 2-bytes, never as 1-byte fixednum.
+	NoFixedNum bool
+
 	// WriteExt flag supports encoding configured extensions with extension tags.
 	// It also controls whether other elements of the new spec are encoded (ie Str8).
 	//
@@ -758,6 +785,7 @@ type MsgpackHandle struct {
 	// a []byte or string based on the setting of RawToString.
 	WriteExt bool
 	binaryEncodingType
+	noElemSeparators
 }
 
 func (h *MsgpackHandle) SetBytesExt(rt reflect.Type, tag uint64, ext BytesExt) (err error) {
@@ -831,7 +859,6 @@ func (c *msgpackSpecRpcCodec) ReadRequestBody(body interface{}) error {
 }
 
 func (c *msgpackSpecRpcCodec) parseCustomHeader(expectTypeByte byte, msgid *uint64, methodOrError *string) (err error) {
-
 	if c.isClosed() {
 		return io.EOF
 	}
@@ -845,11 +872,19 @@ func (c *msgpackSpecRpcCodec) parseCustomHeader(expectTypeByte byte, msgid *uint
 	// 	err = fmt.Errorf("Unexpected value for array descriptor: Expecting %v. Received %v", fia, bs1)
 	// 	return
 	// }
-	var b byte
-	b, err = c.br.ReadByte()
-	if err != nil {
-		return
+	var ba [1]byte
+	var n int
+	for {
+		n, err = c.r.Read(ba[:])
+		if err != nil {
+			return
+		}
+		if n == 1 {
+			break
+		}
 	}
+
+	var b = ba[0]
 	if b != fia {
 		err = fmt.Errorf("Unexpected value for array descriptor: Expecting %v. Received %v", fia, b)
 		return

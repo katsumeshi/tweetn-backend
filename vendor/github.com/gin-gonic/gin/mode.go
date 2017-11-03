@@ -39,7 +39,7 @@ var modeName = DebugMode
 
 func init() {
 	mode := os.Getenv(ENV_GIN_MODE)
-	if mode == "" {
+	if len(mode) == 0 {
 		SetMode(DebugMode)
 	} else {
 		SetMode(mode)
@@ -62,10 +62,6 @@ func SetMode(value string) {
 
 func DisableBindValidation() {
 	binding.Validator = nil
-}
-
-func EnableJsonDecoderUseNumber() {
-	binding.EnableDecoderUseNumber = true
 }
 
 func Mode() string {

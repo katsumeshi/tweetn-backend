@@ -16,7 +16,7 @@ import (
 )
 
 // GenVersion is the current version of codecgen.
-const GenVersion = 6
+const GenVersion = 8
 
 // This file is used to generate helper code for codecgen.
 // The values here i.e. genHelper(En|De)coder are not to be used directly by
@@ -124,13 +124,6 @@ func (f genHelperEncoder) EncExt(v interface{}) (r bool) {
 		return true
 	}
 	return false
-}
-
-// FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
-func (f genHelperEncoder) EncSendContainerState(c containerState) {
-	if f.e.cr != nil {
-		f.e.cr.sendContainerState(c)
-	}
 }
 
 // ---------------- DECODER FOLLOWS -----------------
@@ -249,11 +242,4 @@ func (f genHelperDecoder) DecInferLen(clen, maxlen, unit int) (rvlen int) {
 // FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
 func (f genHelperDecoder) StringView(v []byte) string {
 	return stringView(v)
-}
-
-// FOR USE BY CODECGEN ONLY. IT *WILL* CHANGE WITHOUT NOTICE. *DO NOT USE*
-func (f genHelperDecoder) DecSendContainerState(c containerState) {
-	if f.d.cr != nil {
-		f.d.cr.sendContainerState(c)
-	}
 }
