@@ -1,9 +1,8 @@
 package dao
 
 import (
-	"tweetn-backend/model"
-
 	"github.com/jinzhu/gorm"
+	"github.com/katsumeshi/tweetn-backend/model"
 )
 
 type User interface {

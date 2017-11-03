@@ -6,11 +6,11 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"tweetn-backend/dao"
-	"tweetn-backend/model"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/katsumeshi/tweetn-backend/dao"
+	"github.com/katsumeshi/tweetn-backend/model"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
