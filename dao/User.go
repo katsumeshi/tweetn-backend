@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"tweetn-background/model"
+	"tweetn-backend/model"
 
 	"github.com/jinzhu/gorm"
 )

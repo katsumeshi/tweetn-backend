@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"tweetn-background/dao"
-	"tweetn-background/model"
+	"tweetn-backend/dao"
+	"tweetn-backend/model"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
