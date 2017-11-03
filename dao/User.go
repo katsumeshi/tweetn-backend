@@ -13,6 +13,10 @@ type UserImpl struct {
 	db *gorm.DB
 }
 
+func InitUserDao(db *gorm.DB) *UserImpl {
+	return &UserImpl{db: db}
+}
+
 func (u UserImpl) FindFirst(userName string) (model.User, error) {
 	users := []model.User{}
 	u.db.Limit(1).Find(&users, "username=?", userName)
