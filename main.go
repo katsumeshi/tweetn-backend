@@ -184,7 +184,7 @@ func gormConnect() *gorm.DB {
 	var connectInfo string = "root:@tcp(127.0.0.1:3306)/development"
 	if isHeroku {
 		scheme = u.Scheme
-		connectInfo = u.User.String() + "@tcp(" + u.Host + ")" + u.Path
+		connectInfo = u.User.String() + "@tcp(" + u.Host + ":3306)" + u.Path
 	}
 	gormDB, err := gorm.Open(scheme, connectInfo)
 	if err != nil {
