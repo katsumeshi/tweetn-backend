@@ -188,6 +188,7 @@ func gormConnect() *gorm.DB {
 	}
 	gormDB, err := gorm.Open(scheme, connectInfo)
 	if err != nil {
+		fmt.Printf(scheme + "\n")
 		fmt.Printf(connectInfo + "\n")
 		fmt.Printf("can't connect db")
 		panic("failed to connect database")
