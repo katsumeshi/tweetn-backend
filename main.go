@@ -19,7 +19,7 @@ import (
 )
 
 var isHeroku = false
-var db = gormConnect()
+var db *gorm.DB
 
 func main() {
 	GetMainEngine().Run()
@@ -31,6 +31,7 @@ func GetMainEngine() *gin.Engine {
 	if err == nil {
 		isHeroku = b
 	}
+	db := gormConnect()
 
 	r := gin.Default()
 
