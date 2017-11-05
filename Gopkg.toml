@@ -21,6 +21,12 @@
 #  version = "2.4.0"
 
 
+[metadata.heroku]
+  root-package = "github.com/katsumeshi/tweetn-backend"
+  go-version = "go1.9"
+  install = [ "./cmd/..." ]
+  ensure = "false"
+
 [[constraint]]
   branch = "master"
   name = "github.com/gin-contrib/sessions"
