@@ -14,6 +14,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/katsumeshi/tweetn-backend/service"
+	"github.com/katsumeshi/tweetn-backend/handlar"
 )
 
 var isHeroku = false
@@ -45,13 +47,18 @@ func GetMainEngine() *gin.Engine {
 		r.Use(sessions.Sessions("session", store))
 	}
 
+	userDao := dao.InitUserDao(db);
+	userService := service.InitUserService(userDao);
+	userHandler := handlar.InitUserHandler(userService);
+
+
+
 	r.LoadHTMLGlob("templates/*")
 	r.GET("/", Entrance)
-
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/login", GetLoginView)
-		v1.POST("/login", Login)
+		v1.POST("/login", userHandler.Login)
 		v1.POST("/logout", Logout)
 
 		v1.GET("/users", GetUserCreationView)
@@ -86,7 +93,7 @@ func ShowUser(c *gin.Context) {
 }
 
 func GetUserCreationView(c *gin.Context) {
-	c.HTML(http.StatusOK, "account.tmpl", Error{})
+	c.HTML(http.StatusOK, "account.tmpl", model.Error{})
 }
 
 func CreateUser(c *gin.Context) {
@@ -97,10 +104,10 @@ func CreateUser(c *gin.Context) {
 			db.Create(&user)
 			c.Redirect(http.StatusMovedPermanently, "/v1/users/"+user.Username)
 		} else {
-			c.HTML(http.StatusOK, "account.tmpl", Error{0, "Your account is already exisited"})
+			c.HTML(http.StatusOK, "account.tmpl", model.Error{0, "Your account is already exisited"})
 		}
 	} else {
-		c.HTML(http.StatusOK, "account.tmpl", Error{1, "At least you need to fill in username"})
+		c.HTML(http.StatusOK, "account.tmpl",model. Error{1, "At least you need to fill in username"})
 	}
 }
 
@@ -116,31 +123,6 @@ func GetLoginView(c *gin.Context) {
 	c.HTML(http.StatusOK, "login.tmpl", nil)
 }
 
-func Login(c *gin.Context) {
-	var loginUser model.User
-	c.Bind(&loginUser)
-
-	var daoUser dao.User
-	user, err := daoUser.FindFirst(loginUser.Username)
-	isNotFoundUser := err != nil
-
-	if isNotFoundUser {
-		c.JSON(200, Error{3, "Not found user"})
-	} else {
-		loginUser = user
-		session := sessions.Default(c)
-		v := session.Get("userId")
-		var userId int
-		if v == nil {
-			userId = loginUser.Id
-			session.Set("userId", userId)
-			session.Save()
-		} else {
-			userId = v.(int)
-		}
-		c.Redirect(http.StatusMovedPermanently, "/v1/tweets")
-	}
-}
 
 func Logout(c *gin.Context) {
 	session := sessions.Default(c)
@@ -212,9 +194,3 @@ func gormConnect() *gorm.DB {
 	return db
 }
 
-// Model ---------------------------------------------
-
-type Error struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
