@@ -24,7 +24,7 @@
 [metadata.heroku]
   root-package = "github.com/katsumeshi/tweetn-backend"
   go-version = "go1.9"
-  install = [ "./cmd/..." ]
+  install = [ "./..." ]
   ensure = "false"
 
 [[constraint]]
