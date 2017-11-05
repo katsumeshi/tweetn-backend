@@ -31,7 +31,7 @@ func GetMainEngine() *gin.Engine {
 	if err == nil {
 		isHeroku = b
 	}
-	db := gormConnect()
+	db = gormConnect()
 
 	r := gin.Default()
 
