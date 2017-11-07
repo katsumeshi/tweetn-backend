@@ -5,3 +5,9 @@ go:
 
 script:
     go test -v ./...
+
+services:
+  - mysql
+
+before_install:
+  - mysql -e 'CREATE DATABASE development;'
