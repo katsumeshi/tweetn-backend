@@ -1,12 +1,13 @@
 package dao
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/stretchr/testify/assert"
+	"github.com/katsumeshi/tweetn-backend/model"
+	"time"
 )
 
 var (
@@ -18,11 +19,17 @@ func TestInitUserDao(t *testing.T) {
 	db, err := gorm.Open("mysql", connectInfo)
 	userDao = InitUserDao(db)
 	if err != nil {
-		fmt.Printf(connectInfo + "\n")
-		fmt.Printf("can't connect db")
 		panic("failed to connect database")
 	}
 	userDao = InitUserDao(db)
+
+	if (!db.HasTable("users")) {
+		db.AutoMigrate(&model.User{})
+	}
+
+	user := model.User{0, "unko", "test", "chiba", "ware"}
+	db.Create(&user)
+
 }
 
 func TestUserFindList(t *testing.T) {
