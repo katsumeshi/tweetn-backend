@@ -7,7 +7,6 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"github.com/stretchr/testify/assert"
 	"github.com/katsumeshi/tweetn-backend/model"
-	"time"
 )
 
 var (
