@@ -8,7 +8,6 @@ import (
 
 	"net/http"
 	"github.com/gin-contrib/sessions"
-	"fmt"
 )
 
 type User struct {
