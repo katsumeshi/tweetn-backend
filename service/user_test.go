@@ -8,8 +8,8 @@ import (
 )
 
 func TestFindFirst(t *testing.T) {
+	
 	userDaoMock := new(mocks.User)
-
 	expectedResult := model.User{0, "unko", "test", "akasaka", "programmer"}
 	userDaoMock.On("FindFirst", "test").Return(expectedResult, nil).Once()
 	userService := InitUserService(userDaoMock);

@@ -4,12 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/katsumeshi/tweetn-backend/model"
 	"github.com/katsumeshi/tweetn-backend/service"
-	"github.com/gin-contrib/sessions"
+	"github.com/katsumeshi/tweetn-backend/session"
+
 	"net/http"
+	"github.com/gin-contrib/sessions"
+	"fmt"
 )
 
 type User struct {
 	userService service.User
+	sessions session.Session
 }
 
 func InitUserHandler(userService service.User) *User {
@@ -26,17 +30,10 @@ func  (u User) Login(c *gin.Context) {
 	if isNotFoundUser {
 		c.JSON(200, model.Error{3, "Not found user"})
 	} else {
-		loginUser = user
-		session := sessions.Default(c)
-		v := session.Get("userId")
-		var userId int
-		if v == nil {
-			userId = loginUser.Id
-			session.Set("userId", userId)
-			session.Save()
-		} else {
-			userId = v.(int)
-		}
+
+		u.sessions = session.InitSession(sessions.Default(c));
+		u.sessions.SaveUserId(user.Id)
+
 		c.Redirect(http.StatusMovedPermanently, "/v1/tweets")
 	}
 }
